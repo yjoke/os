@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/element-ui@2.15.8.css">
+    <script src="js/vue@2_dist_vue.js"></script>
+    <script src="js/element-ui@2.15.8.js"></script>
+
+    <link rel="stylesheet" href="mycss/os1.css">
+    <title>OS</title>
+</head>
+<body>
+
+<div id="main">
+    <el-container>
+
+        <el-aside width="210px">
+            <el-col>
+                <el-row>
+                    <div>
+                        <el-select v-model="selectOfYou.value" placeholder="请选择">
+                            <el-option
+                                v-for="item of selectOfYou.options"
+                                v-bind:key="item.value"
+                                v-bind:label="item.label"
+                                v-bind:value="item.value">
+                            </el-option>
+                        </el-select>
+                    </div>
+                    <div v-if="switchForPSA_flag">
+                        <el-switch
+                            v-model="switchForPSA_value"
+                            inactive-text="非抢占式"
+                            active-text="抢占式">
+                        </el-switch>
+                    </div>
+                    <div v-if="timeOfRR_flag">
+                        <div class="block">
+                            <span class="demonstration">轮转时间</span>
+                            <el-slider
+                                v-model="timeOfRR_value"
+                                :max="10"
+                            ></el-slider>
+                        </div>
+                    </div>
+                    <div v-if="addPCB_showButton">
+                        <el-button type="text" @click="dialogFormVisible = true">添加 PCB</el-button>
+
+                        <el-dialog title="添加 PCB" :visible.sync="dialogFormVisible" width="30%">
+
+                            <el-form :model="form" label-with="100px">
+                                <el-form-item label="进程标识符" :label-width="formLabelWidth">
+                                    <el-input
+                                            placeholder="默认值为唯一 id"
+                                            type="text"
+                                            v-model="form.name"
+                                            autocomplete="off"
+                                            maxlength="10"
+                                            show-word-limit
+                                    ></el-input>
+                                </el-form-item>
+
+                                <el-form-item label="优先数" :label-width="formLabelWidth" v-show="switchForPSA_flag">
+                                    <el-input-number v-model="form.priorityNum" :step="1" :min="1"></el-input-number>
+                                </el-form-item>
+
+                                <el-form-item label="完成需要时间片数" :label-width="formLabelWidth">
+                                    <el-input-number v-model="form.needTime" :step="1" :min="1"></el-input-number>
+                                </el-form-item>
+                            </el-form>
+
+                            <div slot="footer" class="dialog-footer">
+                                <el-button @click="dialogFormVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="addSubmit">确 定</el-button>
+                            </div>
+
+                        </el-dialog>
+                    </div>
+                </el-row>
+
+                <el-row v-if="addPCB_showButton">
+                    <el-col :span="5">
+                        <el-button icon="el-icon-refresh" circle
+                            @click="refresh"></el-button>
+                    </el-col>
+                    <el-col :span="5">
+                        <el-button icon="el-icon-caret-right" circle
+                            @click="run">1</el-button>
+                    </el-col>
+                </el-row>
+            </el-col>
+        </el-aside>
+
+        <el-container>
+            <el-aside width="50%">
+
+                <el-container>
+                <el-main>
+                    <div><h3>执行中</h3></div>
+                    <div style="height: 70px;" class="cab">
+                        <el-scrollbar style="height:100%">
+
+                            <div style="box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)"
+                                 v-for="item of exec"
+                                 :key="item.id">
+                                <el-descriptions>
+                                    <el-descriptions-item label="PDB 标识">{{ item.name }}</el-descriptions-item>
+                                    <el-descriptions-item label="已占用CPU时间">{{ item.cpuTime }}</el-descriptions-item>
+                                    <el-descriptions-item label="还需要CPU时间">{{ item.needTime }}</el-descriptions-item>
+                                    <el-descriptions-item label="优先数" v-if="switchForPSA_flag">
+                                        {{ item.priorityNum }}
+                                    </el-descriptions-item>
+                                </el-descriptions>
+                            </div>
+
+                        </el-scrollbar>
+                    </div>
+                </el-main>
+                </el-container>
+
+                <el-container>
+                <el-main>
+                    <div><h3>就绪队列</h3></div>
+                    <div style="height: 470px;" class="cab">
+                        <el-scrollbar style="height:100%">
+
+                            <div style="box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)"
+                                 v-for="item of readyQueue"
+                                 :key="item.id">
+                                <el-descriptions>
+                                    <el-descriptions-item label="PDB 标识">{{ item.name }}</el-descriptions-item>
+                                    <el-descriptions-item label="已占用CPU时间">{{ item.cpuTime }}</el-descriptions-item>
+                                    <el-descriptions-item label="还需要CPU时间">{{ item.needTime }}</el-descriptions-item>
+                                    <el-descriptions-item label="优先数" v-if="switchForPSA_flag">
+                                        {{ item.priorityNum }}
+                                    </el-descriptions-item>
+                                </el-descriptions>
+                                <p></p>
+                            </div>
+
+                        </el-scrollbar>
+                    </div>
+                </el-main>
+                </el-container>
+
+            </el-aside>
+
+            <el-container>
+                <el-main>
+                    <div><h3>已完成的进程</h3></div>
+                    <div style="height: 550px;" class="cab">
+                        <el-scrollbar style="height:100%">
+
+                            <div style="box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04)"
+                                 v-for="item of finish"
+                                 :key="item.id">
+                                <el-descriptions>
+                                    <el-descriptions-item label="PDB 标识">{{ item.name }}</el-descriptions-item>
+                                    <el-descriptions-item label="已占用CPU时间">{{ item.cpuTime }}</el-descriptions-item>
+                                    <el-descriptions-item label="还需要CPU时间">{{ item.needTime }}</el-descriptions-item>
+                                    <el-descriptions-item label="优先数" v-if="switchForPSA_flag">
+                                        {{ item.priorityNum }}
+                                    </el-descriptions-item>
+                                </el-descriptions>
+                                <p></p>
+                            </div>
+
+                        </el-scrollbar>
+                    </div>
+                </el-main>
+            </el-container>
+
+        </el-container>
+
+    </el-container>
+</div>
+
+
+<script src="myjs/os1.js"></script>
+
+</body>
+</html>

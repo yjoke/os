@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/element-ui@2.15.8.css">
+    <script src="js/vue@2_dist_vue.js"></script>
+    <script src="js/element-ui@2.15.8.js"></script>
+
+    <link rel="stylesheet" href="mycss/os2.css">
+    <title>OS</title>
+</head>
+<body>
+
+<div id="main">
+    <el-container>
+
+        <el-aside width="210px">
+
+            <div>
+                <el-select v-model="selectOfYou.value" placeholder="请选择">
+                    <el-option
+                        v-for="item of selectOfYou.options"
+                        v-bind:key="item.value"
+                        v-bind:label="item.label"
+                        v-bind:value="item.value">
+                    </el-option>
+                </el-select>
+            </div><br>
+            <div v-show="selectFlag">
+                <el-row>
+                    <el-col :span="8">
+                        <el-button @click="mallocM">申请</el-button>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-button @click="freeM">释放</el-button>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-button @click="refresh">重置</el-button>
+                    </el-col>
+                </el-row>
+            </div>
+        </el-aside>
+
+        <el-container>
+
+            <el-main>
+                <div><h3>空闲区</h3></div>
+                <el-table
+                    :data="free"
+                    stripe
+                    style="width: 100%">
+                    <el-table-column prop="id" label="编号" width="120"></el-table-column>
+                    <el-table-column prop="src" label="首址" width="120"></el-table-column>
+                    <el-table-column prop="des" label="终值" width="120"></el-table-column>
+                    <el-table-column prop="size" label="大小" width="120"></el-table-column>
+                </el-table>
+            </el-main>
+
+            <el-main>
+                <div><h3>已分配区</h3></div>
+                <el-table
+                        :data="use"
+                        stripe
+                        style="width: 100%">
+                    <el-table-column prop="id" label="编号" width="120"></el-table-column>
+                    <el-table-column prop="src" label="首址" width="120"></el-table-column>
+                    <el-table-column prop="des" label="终值" width="120"></el-table-column>
+                    <el-table-column prop="size" label="大小" width="120"></el-table-column>
+                </el-table>
+            </el-main>
+
+        </el-container>
+
+    </el-container>
+
+    <el-dialog title="dialogTitle" :visible.sync="dialogVisible" width="35%">
+
+        <div slot="title" class="header-title">
+            <span class="title-name">{{ dialogTitle }}</span>
+        </div>
+
+        <el-form :model="form" label-with="100px">
+
+            <el-form-item label="释放首地址" :label-width="formLabelWidth" v-show="freeFlag">
+                <el-input-number v-model="form.src" :step="1" :min="0"></el-input-number>
+            </el-form-item>
+
+            <el-form-item label="释放大小" :label-width="formLabelWidth" v-show="freeFlag">
+                <el-input-number v-model="form.size" :step="1" :min="1"></el-input-number>
+            </el-form-item>
+
+            <el-form-item label="申请大小" :label-width="formLabelWidth" v-show="mallocFlag">
+                <el-input-number v-model="form.size" :step="1" :min="1"></el-input-number>
+            </el-form-item>
+
+
+        </el-form>
+
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="dispose">确 定</el-button>
+        </div>
+
+    </el-dialog>
+</div>
+
+<script src="myjs/os2.js"></script>
+
+<script>
+
+</script>
+
+</body>
+</html>
